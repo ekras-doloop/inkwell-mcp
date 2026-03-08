@@ -107,7 +107,7 @@ def after():
 
     # Mark the acceleration — annotation below and right of the 2000 data point
     ax.annotate("acceleration\nbegins", xy=(2000, 0.40),
-                xytext=(2000, -0.25), fontsize=7.5, color=MUTED,
+                xytext=(2000, 0.12), fontsize=7.5, color=MUTED,
                 fontfamily="serif", style="italic", ha="center",
                 arrowprops=dict(arrowstyle="->", color=MUTED, lw=0.8))
 
@@ -211,7 +211,7 @@ def supergraphic():
              fontfamily="serif")
 
     ax2.annotate("acceleration\nbegins", xy=(2000, 0.40),
-                 xytext=(2000, -0.25), fontsize=8, color=MUTED,
+                 xytext=(2000, 0.12), fontsize=8, color=MUTED,
                  fontfamily="serif", style="italic", ha="center",
                  arrowprops=dict(arrowstyle="->", color=MUTED, lw=0.8))
 
