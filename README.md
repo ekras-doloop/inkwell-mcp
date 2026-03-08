@@ -6,6 +6,20 @@ Inkwell reviews charts in two passes — **substance** (is the data real? does t
 
 Built as an [MCP server](https://modelcontextprotocol.io/) for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Claude Desktop.
 
+## Before / After
+
+Same data (NASA GISS global temperature anomaly, 1880-2024). The BEFORE fails Inkwell's substance check — the title describes the axes instead of stating a finding. The AFTER scores 16/16.
+
+| Before | After |
+|--------|-------|
+| ![Before](examples/before.png) | ![After](examples/after.png) |
+
+**Before**: Rainbow gradient bars, gridlines, generic title ("Over Time"), unnecessary legend, rotated labels, y-axis extends to -1/+2 when data lives in -0.3/+1.3. Inkwell verdict: **SUBSTANCE_FAIL** (S3: title doesn't state a finding).
+
+**After**: Title states the finding, subtitle names NASA GISS as source, direct labeling on endpoints, one color, range frames, meaningful annotation at the acceleration point. Inkwell verdict: **APPROVED, 16/16**.
+
+Generate these yourself: `python examples/before_after.py`
+
 ## Why
 
 LLM-powered chart review sounds great until you try it. The problems we hit:
