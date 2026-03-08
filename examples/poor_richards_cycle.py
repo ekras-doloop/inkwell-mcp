@@ -52,11 +52,11 @@ def review_cycle():
              fontsize=12, ha="center", va="top",
              color=MUTED, fontfamily="serif")
 
-    panel_w = 0.26
-    panel_h = 0.58
-    panel_y = 0.18
-    gap = 0.055
-    x_starts = [0.03, 0.03 + panel_w + gap, 0.03 + 2 * (panel_w + gap)]
+    panel_w = 0.25
+    panel_h = 0.55
+    panel_y = 0.19
+    gap = 0.07
+    x_starts = [0.02, 0.02 + panel_w + gap, 0.02 + 2 * (panel_w + gap)]
 
     # ══════════════════════════════════════════════════════════════════
     # ROUND 1: Exploded pie — SUBSTANCE_FAIL
@@ -95,12 +95,13 @@ def review_cycle():
              fontsize=7.5, color=MUTED, ha="center", fontfamily="serif",
              style="italic", linespacing=1.3)
 
-    # Fix label
+    # Fix label — positioned in upper third to avoid bar labels
     arrow_x = x_starts[0] + panel_w + gap / 2
-    fig.text(arrow_x, panel_y + panel_h / 2 + 0.03,
+    fix_y = panel_y + panel_h * 0.85
+    fig.text(arrow_x, fix_y + 0.03,
              "FIX", fontsize=10, fontweight="bold", color=INK,
              ha="center", fontfamily="serif")
-    fig.text(arrow_x, panel_y + panel_h / 2 - 0.02,
+    fig.text(arrow_x, fix_y - 0.02,
              "Switch to bars.\nTitle = finding.",
              fontsize=7.5, color=MUTED, ha="center", fontfamily="serif",
              linespacing=1.3)
@@ -144,13 +145,13 @@ def review_cycle():
              fontsize=7.5, color=MUTED, ha="center", fontfamily="serif",
              style="italic", linespacing=1.3)
 
-    # Fix label
+    # Fix label — positioned in upper third to avoid bar labels
     arrow_x2 = x_starts[1] + panel_w + gap / 2
-    fig.text(arrow_x2, panel_y + panel_h / 2 + 0.03,
+    fig.text(arrow_x2, fix_y + 0.03,
              "FIX", fontsize=10, fontweight="bold", color=INK,
              ha="center", fontfamily="serif")
-    fig.text(arrow_x2, panel_y + panel_h / 2 - 0.02,
-             "Sort by value.\nHorizontal bars.\n2 colors. Direct\nlabels. Median line.",
+    fig.text(arrow_x2, fix_y - 0.02,
+             "Sort. Horizontal.\n2 colors. Median.",
              fontsize=7, color=MUTED, ha="center", fontfamily="serif",
              linespacing=1.3)
 
@@ -222,7 +223,7 @@ def review_cycle():
     for i in range(2):
         x_from = x_starts[i] + panel_w + 0.003
         x_to = x_starts[i + 1] - 0.003
-        mid_y = panel_y + panel_h / 2
+        mid_y = panel_y + panel_h * 0.85
         arrow = FancyArrowPatch(
             (x_from, mid_y), (x_to, mid_y),
             transform=fig.transFigure,
