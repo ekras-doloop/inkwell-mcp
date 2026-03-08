@@ -59,6 +59,10 @@ def before():
     fig.text(0.5, 0.5, "BEFORE", fontsize=72, color="red", alpha=0.12,
              ha="center", va="center", fontweight="bold", rotation=30)
 
+    # Source and repo
+    fig.text(0.5, -0.02, "Data: data.giss.nasa.gov/gistemp/  |  github.com/ekras-doloop/inkwell-mcp",
+             fontsize=8, color="gray", ha="center", fontfamily="sans-serif")
+
     plt.tight_layout()
     fig.savefig(OUT / "before.png", dpi=180, bbox_inches="tight",
                 facecolor="white")
@@ -133,6 +137,10 @@ def after():
     # "AFTER" watermark
     fig.text(0.5, 0.5, "AFTER", fontsize=72, color="#27ae60", alpha=0.08,
              ha="center", va="center", fontweight="bold", rotation=30)
+
+    # Source and repo
+    fig.text(0.5, -0.02, "Data: data.giss.nasa.gov/gistemp/  |  github.com/ekras-doloop/inkwell-mcp",
+             fontsize=8, color=MUTED, ha="center", fontfamily="serif")
 
     plt.tight_layout()
     fig.savefig(OUT / "after.png", dpi=180, bbox_inches="tight",
