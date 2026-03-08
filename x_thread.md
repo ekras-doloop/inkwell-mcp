@@ -1,5 +1,27 @@
 # Inkwell MCP — X Thread
 
+## Posting guide
+
+13 posts. Attach images as noted. All images are in `examples/`.
+
+| Post | Image to attach |
+|------|----------------|
+| 1 | (none) |
+| 2 | (none) |
+| 3 | (none) |
+| 4 | (none) |
+| 5 | `supergraphic.png` |
+| 6 | `poor_richards_chartjunk.png` |
+| 7 | `review_cycle.png` |
+| 8 | `poor_richards_cycle.png` |
+| 9 | (none) |
+| 10 | (none) |
+| 11 | (none) |
+| 12 | (none) |
+| 13 | (none) |
+
+---
+
 ## Post 1 (personal hook)
 
 In 1854, John Snow drew a map. He plotted cholera deaths as tiny bars stacked along the streets of Soho, and the pattern pointed straight at the Broad Street water pump. One visualization overturned the entire miasma theory of disease. I rave about Steven Johnson's "The Ghost Map" to my students every chance I get because it's the proof case: a single, honest chart can change what an entire civilization believes.
@@ -40,7 +62,7 @@ And because there was no scoring — just APPROVE or REJECT — there was no con
 
 ---
 
-## Post 5 (before/after — attach both images)
+## Post 5 (NASA before/after — attach `supergraphic.png`)
 
 Here's what Inkwell actually does. Same data: NASA GISS global temperature anomaly, 1880-2024. Public dataset anyone can pull.
 
@@ -55,7 +77,49 @@ Generate these yourself: github.com/ekras-doloop/inkwell-mcp/tree/main/examples
 
 ---
 
-## Post 6 (the architectural fix)
+## Post 6 (Franklin before/after — attach `poor_richards_chartjunk.png`)
+
+Poor Richard's Chartjunk. Same idea, different century.
+
+Benjamin Franklin tracked his 13 virtues in a weekly grid — one of history's first self-quantification systems. He recorded every violation and admitted Order was his chronic failure: "I was surprised to find myself so much fuller of faults than I had imagined."
+
+BEFORE: An exploded pie chart with 13 pastel slices. You can't compare any two values. You can't see that Order is 3x the median. The title says "Distribution (%)" — distribution of what? Compared to what? Inkwell verdict: SUBSTANCE_FAIL. Pie hides rank order. No finding visible.
+
+AFTER: Sorted horizontal bars. Order jumps out at 18, red. Industry and Humility in dark ink. Everything else in muted gray. A dashed median line at 6 shows the "3x" claim visually. Title: "Order was Franklin's worst vice — 18 violations per course, 3x his median." Inkwell verdict: APPROVED, 16/16.
+
+Data source: "The Autobiography of Benjamin Franklin" (1791), Part Two.
+
+---
+
+## Post 7 (NASA review cycle — attach `review_cycle.png`)
+
+But how does Inkwell get you from BEFORE to AFTER? Here's the actual feedback loop, three rounds on the NASA temperature data:
+
+ROUND 1: The bad chart goes in. Inkwell runs substance check. S3 FAIL: "Title describes axes, not finding. No argument visible." Review stops. Style is skipped. You know exactly what to fix: rewrite the title as a finding.
+
+ROUND 2: Title fixed. Now Inkwell passes substance and runs style. Score: 9/16 — STYLE_NEEDS_WORK. C1: 0 — gridlines add no data. C3: 0 — 10 colors, need max 2. C2: 0 — legend instead of direct labels. Three specific things to fix. Not "it doesn't feel right." Three things.
+
+ROUND 3: Gridlines gone. One color. Direct labels. Range frames. Score: 16/16 — APPROVED. Three rounds. Done.
+
+This is what finite scoring buys you: convergence. You know where you stand at every step.
+
+---
+
+## Post 8 (Franklin review cycle — attach `poor_richards_cycle.png`)
+
+Same convergence, different data. Franklin's 13 virtues through three rounds:
+
+ROUND 1: Exploded pie chart. SUBSTANCE_FAIL. S2: "Pie chart hides rank order." S3: "No finding visible in 5 seconds." Fix: switch to bars, write the finding into the title.
+
+ROUND 2: Vertical bars, unsorted, rainbow colors, gridlines. STYLE_NEEDS_WORK, 8/16. C1: 0 — gridlines. C3: 0 — 13 colors. C5: 0 — rotated labels, cramped. Fix: sort by value, go horizontal, 2 colors, add median line.
+
+ROUND 3: Sorted horizontal bars. Order in red at 18. Median line at 6. APPROVED, 16/16.
+
+Two different datasets, two different starting points, same pattern: substance first, style second, 3 rounds to done. The feedback is specific enough to act on and finite enough to converge.
+
+---
+
+## Post 9 (the architectural fix)
 
 The fix wasn't prompt engineering. It was architecture. I split the review into two completely separate passes with separate system prompts, separate API calls, and separate verdicts.
 
@@ -81,7 +145,7 @@ Total out of 16. >= 12 passes. 8-11 needs work. < 8 fails. A number, not a vibe.
 
 ---
 
-## Post 7 (why this works)
+## Post 10 (why this works)
 
 Three things make this converge where v1 didn't:
 
@@ -93,7 +157,7 @@ Third, anti-hallucination. The style prompt says: "Score ONLY what you can see i
 
 ---
 
-## Post 8 (the HITL gate)
+## Post 11 (the HITL gate)
 
 The most important design decision isn't in either prompt. It's the escape hatch.
 
@@ -105,15 +169,7 @@ I think every adversarial LLM system needs a HITL gate. Code review bots. Writin
 
 ---
 
-## Post 9 (the results)
-
-With Inkwell v2, all 18 charts were approved within 1-3 rounds each. Average style score: 15.4/16. Three charts needed substance fixes — title math that didn't match the data (said "drops to 4" but the endpoint was 9.4). Those were legitimate catches. Zero infinite loops. Zero hallucinated violations.
-
-Compare: v1 took 12 rounds on a single chart and never converged. Same charts, same data, same visual style. The only difference was the review architecture.
-
----
-
-## Post 10 (what it is)
+## Post 12 (what it is)
 
 Inkwell is an MCP server. One Python file, ~300 lines. Works with Claude Code and Claude Desktop. You point it at a chart image, give it context about what the chart shows, and it runs the two-pass review.
 
@@ -129,7 +185,7 @@ github.com/ekras-doloop/inkwell-mcp
 
 ---
 
-## Post 11 (the deeper lesson)
+## Post 13 (the deeper lesson)
 
 John Snow didn't need a legend on his cholera map. He didn't need gridlines, gradient fills, or a 3D perspective view. He needed bars on streets and a pump in the middle. The data pointed at the pump, and a civilization changed its mind about how disease spreads.
 
