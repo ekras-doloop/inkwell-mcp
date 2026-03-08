@@ -101,11 +101,11 @@ def after():
     ax.text(1882, 0.04, "1951–1980 baseline", fontsize=7.5, color=LIGHT,
             fontfamily="serif")
 
-    # Mark the acceleration
-    ax.annotate("", xy=(2000, 0.40), xytext=(2000, 0.03),
+    # Mark the acceleration — annotation below and right of the 2000 data point
+    ax.annotate("acceleration\nbegins", xy=(2000, 0.40),
+                xytext=(2006, -0.05), fontsize=7.5, color=MUTED,
+                fontfamily="serif", style="italic", ha="left",
                 arrowprops=dict(arrowstyle="->", color=MUTED, lw=0.8))
-    ax.text(1997, 0.21, "acceleration\nbegins", fontsize=7.5, color=MUTED,
-            ha="right", fontfamily="serif", style="italic")
 
     # Range frame — axes span data only
     ax.set_xlim(1875, 2028)
