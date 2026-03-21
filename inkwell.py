@@ -12,7 +12,7 @@ HITL gate: After 3 style-only rejections on the same chart, escalates to
   human review instead of looping forever.
 
 Setup:
-    pip install mcp anthropic
+    pip install mcp anthropic  # or: pip install mcp openai
 
     Add to .mcp.json (Claude Code) or claude_desktop_config.json (Claude Desktop):
     {
@@ -21,6 +21,22 @@ Setup:
                 "command": "python3",
                 "args": ["/path/to/inkwell.py"],
                 "env": { "ANTHROPIC_API_KEY": "sk-ant-..." }
+            }
+        }
+    }
+
+    For OpenAI-compatible APIs (Gemini, Nemotron, Ollama, vLLM, etc.):
+    {
+        "mcpServers": {
+            "inkwell": {
+                "command": "python3",
+                "args": ["/path/to/inkwell.py"],
+                "env": {
+                    "INKWELL_BACKEND": "openai",
+                    "INKWELL_OPENAI_API_KEY": "your-key",
+                    "INKWELL_OPENAI_BASE_URL": "https://api.example.com/v1",
+                    "INKWELL_MODEL": "model-name"
+                }
             }
         }
     }
@@ -46,14 +62,40 @@ mcp = FastMCP(
 
 # ── Configuration ─────────────────────────────────────────────────────────
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-REVIEW_MODEL = os.environ.get("INKWELL_MODEL", "claude-sonnet-4-20250514")
+# Backend: "anthropic" (default), "openai", or "bedrock"
+BACKEND = os.environ.get("INKWELL_BACKEND", "").lower()
+REVIEW_MODEL = os.environ.get("INKWELL_MODEL", "")
 
-# Bedrock fallback (optional)
+# Anthropic
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+# OpenAI-compatible (Gemini, Nemotron, Ollama, vLLM, LiteLLM, etc.)
+OPENAI_API_KEY = os.environ.get("INKWELL_OPENAI_API_KEY", "")
+OPENAI_BASE_URL = os.environ.get("INKWELL_OPENAI_BASE_URL", "")
+
+# Bedrock
 BEDROCK_REGION = os.environ.get("AWS_REGION", "us-east-1")
 BEDROCK_MODEL = os.environ.get(
     "INKWELL_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0"
 )
+
+# Auto-detect backend if not explicitly set
+if not BACKEND:
+    if OPENAI_API_KEY or OPENAI_BASE_URL:
+        BACKEND = "openai"
+    elif ANTHROPIC_API_KEY:
+        BACKEND = "anthropic"
+    else:
+        BACKEND = "bedrock"
+
+# Default model per backend
+if not REVIEW_MODEL:
+    if BACKEND == "openai":
+        REVIEW_MODEL = "gpt-4o"
+    elif BACKEND == "bedrock":
+        REVIEW_MODEL = BEDROCK_MODEL
+    else:
+        REVIEW_MODEL = "claude-sonnet-4-20250514"
 
 # ── Review history for HITL escalation ────────────────────────────────────
 # Key: chart_id (hash of filename), Value: list of review results
@@ -123,9 +165,47 @@ VERDICT: STYLE_PASS (if >= 12) or STYLE_NEEDS_WORK (if 8-11) or STYLE_FAIL (if <
 Do NOT suggest alternative visualization types. That was decided in substance review."""
 
 
-def _call_claude(system: str, content: list, max_tokens: int = 1500) -> str:
-    """Call Claude via Anthropic API (preferred) or Bedrock fallback."""
-    if ANTHROPIC_API_KEY:
+def _anthropic_to_openai_content(content: list) -> list:
+    """Convert Anthropic-format content blocks to OpenAI-format."""
+    openai_content = []
+    for block in content:
+        if block["type"] == "text":
+            openai_content.append({"type": "text", "text": block["text"]})
+        elif block["type"] == "image":
+            src = block["source"]
+            data_uri = f"data:{src['media_type']};base64,{src['data']}"
+            openai_content.append({
+                "type": "image_url",
+                "image_url": {"url": data_uri},
+            })
+    return openai_content
+
+
+def _call_llm(system: str, content: list, max_tokens: int = 1500) -> str:
+    """Call the configured LLM backend.
+
+    Supports: anthropic (default), openai-compatible, bedrock.
+    Content blocks use Anthropic format internally; converted for OpenAI.
+    """
+    if BACKEND == "openai":
+        import openai
+
+        client_kwargs = {"api_key": OPENAI_API_KEY} if OPENAI_API_KEY else {}
+        if OPENAI_BASE_URL:
+            client_kwargs["base_url"] = OPENAI_BASE_URL
+
+        client = openai.OpenAI(**client_kwargs)
+        response = client.chat.completions.create(
+            model=REVIEW_MODEL,
+            max_tokens=max_tokens,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": _anthropic_to_openai_content(content)},
+            ],
+        )
+        return response.choices[0].message.content
+
+    elif BACKEND == "anthropic":
         import anthropic
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -136,7 +216,8 @@ def _call_claude(system: str, content: list, max_tokens: int = 1500) -> str:
             messages=[{"role": "user", "content": content}],
         )
         return response.content[0].text
-    else:
+
+    else:  # bedrock
         import boto3
 
         client = boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
@@ -240,7 +321,7 @@ def review_chart(
 
     # ── PASS 1: SUBSTANCE ─────────────────────────────────────────
     substance_content = image_content + [{"type": "text", "text": prompt_text}]
-    substance_result = _call_claude(SUBSTANCE_SYSTEM, substance_content, max_tokens=800)
+    substance_result = _call_llm(SUBSTANCE_SYSTEM, substance_content, max_tokens=800)
 
     substance_pass = "SUBSTANCE_PASS" in substance_result
 
@@ -260,7 +341,7 @@ def review_chart(
 
     # ── PASS 2: STYLE ─────────────────────────────────────────────
     style_content = image_content + [{"type": "text", "text": prompt_text}]
-    style_result = _call_claude(STYLE_SYSTEM, style_content, max_tokens=1000)
+    style_result = _call_llm(STYLE_SYSTEM, style_content, max_tokens=1000)
 
     # Parse score from result
     style_score = None
@@ -383,7 +464,7 @@ Text:
 {paper_text[:8000]}"""
 
     content = [{"type": "text", "text": spec_prompt}]
-    return _call_claude(SUBSTANCE_SYSTEM, content, max_tokens=3000)
+    return _call_llm(SUBSTANCE_SYSTEM, content, max_tokens=3000)
 
 
 if __name__ == "__main__":
