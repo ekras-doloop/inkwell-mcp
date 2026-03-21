@@ -39,7 +39,9 @@ Inkwell fixes all four:
 ## Install
 
 ```bash
-pip install mcp anthropic
+pip install mcp anthropic   # Anthropic backend
+# or
+pip install mcp openai      # OpenAI-compatible backend (Gemini, Nemotron, Ollama, etc.)
 ```
 
 ## Setup
@@ -82,16 +84,40 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
+### OpenAI-compatible APIs
+
+Use any vision-capable model via the OpenAI SDK (Gemini, Nemotron, Ollama, vLLM, LiteLLM, etc.):
+
+```json
+{
+  "mcpServers": {
+    "inkwell": {
+      "command": "python3",
+      "args": ["/absolute/path/to/inkwell.py"],
+      "env": {
+        "INKWELL_BACKEND": "openai",
+        "INKWELL_OPENAI_API_KEY": "your-key",
+        "INKWELL_OPENAI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "INKWELL_MODEL": "gemini-2.0-flash"
+      }
+    }
+  }
+}
+```
+
 ## Configuration
 
 Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | (required) | Your Anthropic API key |
-| `INKWELL_MODEL` | `claude-sonnet-4-20250514` | Model for reviews (vision-capable) |
+| `INKWELL_BACKEND` | (auto-detected) | `"anthropic"`, `"openai"`, or `"bedrock"` |
+| `INKWELL_MODEL` | (per backend) | Model for reviews (must support vision) |
+| `ANTHROPIC_API_KEY` | | Anthropic API key |
+| `INKWELL_OPENAI_API_KEY` | | API key for OpenAI-compatible endpoint |
+| `INKWELL_OPENAI_BASE_URL` | | Base URL for OpenAI-compatible endpoint |
 | `INKWELL_HITL_THRESHOLD` | `3` | Style rejections before human escalation |
-| `AWS_REGION` | `us-east-1` | Bedrock region (if no Anthropic key) |
+| `AWS_REGION` | `us-east-1` | Bedrock region |
 | `INKWELL_BEDROCK_MODEL` | `us.anthropic.claude-sonnet-4-20250514-v1:0` | Bedrock model ID |
 
 ## Tools
